@@ -1,0 +1,7 @@
+{
+    "IpRouter": "192.168.0.2",
+    "Login": {
+            "User": "admin",
+            "Password": "admin"
+        }
+}

@@ -16,15 +16,6 @@ def makeRequest(url,heads):
     request = urllib2.Request(url, None, heads)
     return (urllib2.urlopen(request)).read()
 
-def getTotalTarget(number):
-    url = 'http://' + data["IpRouter"] + '/userRpm/AccessCtrlAccessTargetsRpm.htm?Page='+str(number)
-    
-    heads = { 'Referer' : 'http://' + data["IpRouter"] + '/userRpm/AccessCtrlAccessTargetsRpm.htm',
-             'Authorization' : auth
-    }
-
-    return makeRequest(url,heads)
-
 def addTarget(Description,domain1,domain2,domain3,domain4):
     url = 'http://' + data["IpRouter"] + '/userRpm/AccessCtrlAccessTargetsRpm.htm?target_type=0&targets_lists_name='+Description+ '&dst_ip_start=&dst_ip_end=&dst_port_start=&dst_port_end=&proto=0&Commonport=0&url_0='+domain1+'&url_1='+domain2+'&url_2='+domain3+'&url_3='+domain4+'&Changed=0&SelIndex=0&fromAdd=0&Page=1&Save=Save'
     
@@ -44,9 +35,15 @@ def addHostLan(Description,ipStart,ipEnd):
 
     return makeRequest(url,heads)
 
-def countTarget(number):
-    page = getTotalTarget(number)
-    devices = []
+def getTargetList(number):
+    url = 'http://' + IpRouter + '/userRpm/AccessCtrlAccessTargetsRpm.htm?Page='+str(number)
+    
+    heads = { 'Referer' : 'http://' + IpRouter + '/userRpm/AccessCtrlAccessTargetsRpm.htm',
+             'Authorization' : auth
+    }
+
+    page = makeRequest(url,heads)
+    target = []
 
     #Parse out target list
     page = page.split("new Array(", 1)
@@ -56,12 +53,12 @@ def countTarget(number):
 
     for index in range(len(data)):
         if(index != 0):
-            devices.append( data[index].split(",") )
+            target.append( data[index].split(",") )
 
-    return (len(devices))-1
+    return target
 
-def countTargets():
-    return countTarget(1)+countTarget(2)
+def countAllTarget():
+    return (len(getTargetList(1))-1)+(len(getTargetList(2))-1)
 
 def addRule(ruleName,numberTarget):
     url = 'http://' + data["IpRouter"] + '/userRpm/AccessCtrlAccessRulesRpm.htm?rule_name='+ruleName+'&hosts_lists=0&targets_lists='+str(numberTarget)+'&scheds_lists=255&enable=1&Changed=0&SelIndex=0&Page=1&Save=Save'
@@ -126,13 +123,38 @@ def setIpDevice(ip,mask):
 
     return makeRequest(url,heads)
 
+def getHostList():
+    url = 'http://' + IpRouter + '/userRpm/AccessCtrlHostsListsRpm.htm?Refresh=Refresh'
+    
+    heads = { 'Referer' : 'http://' + IpRouter + '/userRpm/AccessCtrlHostsListsRpm.htm',
+             'Authorization' : auth
+    }
+
+    page = makeRequest(url,heads)
+    host = []
+
+    #Parse out target list
+    page = page.split("new Array(", 1)
+    page = page[1].split('0,0 );', 1)
+    page = page[0].replace('"',"").replace(' ',"")
+    data = page.split("\n")
+
+    for index in range(len(data)):
+        if(index != 0):
+            host.append( data[index].split(",") )
+
+    return host
+
 if __name__ == "__main__":
+    print ("Welcome to apy TPLink")
     # reboot()
 
     # setIpDevice("192.168.0.2","255.255.255.0")
 
     # addTarget("Description","domain1","domain2","domain3","domain4")
     # deleteAllTarget()
+    # countAllTarget()
+    # getTargetList(number)
 
     # addHostLan("Description","ipStart","ipEnd")
     # deleteAllHosts()
@@ -143,3 +165,4 @@ if __name__ == "__main__":
     # print countTargets()
 
     # enableAccessControl():
+    # print getHostList()
